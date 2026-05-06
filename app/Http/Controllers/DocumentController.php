@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Document;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class DocumentController extends Controller
+{
+    public function getAll(): JsonResponse
+    {
+        return response()->json(Document::all());
+    }
+
+    public function getById(string $id): JsonResponse
+    {
+        $document = Document::find($id);
+
+        if (!$document) {
+            return response()->json(['message' => 'Document not found'], 404);
+        }
+
+        return response()->json($document);
+    }
+
+    public function create(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title'   => 'required|string|max:255',
+            'type_id' => 'required|uuid|exists:document_types,id',
+            'file_id' => 'required|uuid|exists:files,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $document = Document::create($validator->validated());
+
+        return response()->json($document, 201);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $document = Document::find($id);
+
+        if (!$document) {
+            return response()->json(['message' => 'Document not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'title'   => 'sometimes|string|max:255',
+            'type_id' => 'sometimes|uuid|exists:document_types,id',
+            'file_id' => 'sometimes|uuid|exists:files,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $document->update($validator->validated());
+
+        return response()->json($document);
+    }
+
+    public function delete(string $id): JsonResponse
+    {
+        $document = Document::find($id);
+
+        if (!$document) {
+            return response()->json(['message' => 'Document not found'], 404);
+        }
+
+        $document->delete();
+
+        return response()->json(null, 204);
+    }
+}
