@@ -9,17 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('document_types', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name')->unique();
             $table->text('description')->nullable();
             $table->timestamps();
         });
 
         Schema::create('documents', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
-            $table->foreignId('type_id')->constrained('document_types')->onDelete('cascade');
-            $table->foreignId('file_id')->constrained('files')->onDelete('cascade');
+            $table->foreignUuid('type_id')->constrained('document_types')->onDelete('cascade');
+            $table->foreignUuid('file_id')->constrained('files')->onDelete('cascade');
             $table->timestamps();
         });
     }

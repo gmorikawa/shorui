@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('files', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('path')->unique();
             $table->string('state')->default(FileState::UPLOADING->value);
             $table->timestamps();
