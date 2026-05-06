@@ -10,6 +10,9 @@ class Document extends Model
 {
     use HasUuids;
 
+    protected $keyType = 'string';
+    public $incrementing = false;
+
     protected $fillable = [
         'title',
         'type_id',

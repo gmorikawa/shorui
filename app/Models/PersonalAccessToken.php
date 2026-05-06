@@ -3,17 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\PersonalAccessToken as SanctumPersonalAccessToken;
 
-class DocumentType extends Model
+class PersonalAccessToken extends SanctumPersonalAccessToken
 {
     use HasUuids;
 
     protected $keyType = 'string';
     public $incrementing = false;
-
-    protected $fillable = [
-        'name',
-        'description',
-    ];
 }
