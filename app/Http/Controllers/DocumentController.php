@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -76,5 +77,20 @@ class DocumentController extends Controller
         $document->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function upload(Request $request, string $id): JsonResponse
+    {
+        $file = $request->file('file');
+        $path = $file->store('uploads', 'public');
+
+        $file = new File([
+            'path' => $path,
+            'state' => \App\Enums\FileState::AVAILABLE
+        ]);
+
+        $file->save();
+
+        return response()->json(['message' => 'File uploaded successfully', 'data' => $file], 201);
     }
 }

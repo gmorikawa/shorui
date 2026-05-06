@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('title');
             $table->foreignUuid('type_id')->constrained('document_types')->onDelete('cascade');
             $table->foreignUuid('file_id')->constrained('files')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
