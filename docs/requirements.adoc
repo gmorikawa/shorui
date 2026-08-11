@@ -1,0 +1,26 @@
+= Functional Requirements
+
+== Authentication and Authorization
+* The system has two roles of users: Admin and Regular User.
+* Admin users can manage all aspects of the system, including user management and system settings.
+* Regular Users can access and use the system's features but have limited permissions compared to Admin users.
+* Every user must authenticate using a username and password to access the system.
+* The system should support secure password storage and authentication mechanisms, such as hashing and salting passwords.
+
+== User Management
+* Only one Admin user can be created during the initial setup of the system.
+* Admin users can create, read, update, and delete user accounts.
+* Regular users cannot create their own accounts; they must be created by an Admin user.
+
+== Document Management
+* The system should allow users to upload, download, and manage documents.
+* Users can organize documents into folders and subfolders for better organization.
+* Documents are private to the user who uploaded them, but Admin users can access all documents in the system.
+* Admin can create types of documents and set additional `metadata` that should be required for each type of document.
+* To add a document, useres must provide the document file and fill out the required metadata fields associated with the document type.
+* Every document must have a `unique identifier`, a `title`, and a `description`. Additional metadata fields can be defined by Admin users for each document type.
+
+== Search and Filtering
+* The system should provide a search functionality that allows users to search for documents based on their title, description, and metadata fields.
+* Every search should be paginated to improve performance and user experience.
+* The pagination options should be configurable by Admin users, allowing them to set the number of results displayed per page.
