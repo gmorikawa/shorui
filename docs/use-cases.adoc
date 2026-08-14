@@ -1,0 +1,27 @@
+= Use Cases
+
+== Actors
+* Administrator: the user that manages the system, and have full access to all its resources.
+* Member: a regular user with restricted access.
+
+== Cases
+
+=== Register a new member
+* Actor: Administrator
+* Description: The administrator can register a new member by providing the required information, such as name, email, and password.
+
+=== Login
+* Actor: Member
+* Description: A member can log in to the system by providing their email and password.
+
+=== Register Document Type
+* Actor: Administrator
+* Description: The administrator can register a new document type by providing the required information, such as name and description.
+
+=== Register Document
+* Actor: Member/Administrator
+* Description: A member or administrator can upload a document by providing the required information, such as document type, title, and file.
+
+=== Search Document
+* Actor: Member/Administrator
+* Description: A member or administrator can search for documents by providing search criteria, such as document type, title, or keywords.
