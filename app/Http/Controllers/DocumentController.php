@@ -38,7 +38,10 @@ class DocumentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $document = Document::create($validator->validated());
+        $document = $validator->validated();
+        $document['user_id'] = $request->user()->id;
+
+        $document = Document::create($document);
 
         return response()->json($document, 201);
     }

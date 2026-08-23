@@ -6,8 +6,11 @@ use App\Enums\FileState;
 use App\Models\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
@@ -27,20 +30,41 @@ class FileController extends Controller
         return response()->json($file);
     }
 
-    public function create(Request $request): JsonResponse
+    public function upload(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'path'  => 'required|string|unique:files,path',
-            'state' => ['sometimes', new Enum(FileState::class)],
+            'file' => 'required|file',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $file = File::create($validator->validated());
+        $uploadedFile = $request->file('file');
+        $filename = Str::uuid() . '.' . $uploadedFile->getClientOriginalExtension();
+        $path = $uploadedFile->storeAs('', $filename, 'local');
+
+        $file = File::create([
+            'path'  => $path,
+            'state' => FileState::AVAILABLE,
+        ]);
 
         return response()->json($file, 201);
+    }
+
+    public function download(string $id): JsonResponse|StreamedResponse
+    {
+        $file = File::find($id);
+
+        if (!$file) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        if (!Storage::disk('local')->exists($file->path)) {
+            return response()->json(['message' => 'File content not found'], 404);
+        }
+
+        return Storage::disk('local')->download($file->path);
     }
 
     public function update(Request $request, string $id): JsonResponse
