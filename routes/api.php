@@ -5,7 +5,6 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => '/auth'], function () {
@@ -23,26 +22,24 @@ Route::group(['prefix' => '/users'], function () {
     Route::delete('/{id}', [UserController::class, 'delete'])->middleware('auth:sanctum');
 });
 
-Route::group(['prefix' => '/documents'], function () {
+Route::group(['prefix' => '/documents', 'middleware' => 'auth:sanctum'], function () {
     Route::get('/', [DocumentController::class, 'getAll']);
     Route::get('/{id}', [DocumentController::class, 'getById']);
     Route::post('/', [DocumentController::class, 'create']);
     Route::put('/{id}', [DocumentController::class, 'update']);
     Route::delete('/{id}', [DocumentController::class, 'delete']);
-})->middleware('auth:sanctum');
+});
 
-Route::group(['prefix' => '/document-types'], function () {
+Route::group(['prefix' => '/document-types', 'middleware' => 'auth:sanctum'], function () {
     Route::get('/', [DocumentTypeController::class, 'getAll']);
     Route::get('/{id}', [DocumentTypeController::class, 'getById']);
     Route::post('/', [DocumentTypeController::class, 'create']);
     Route::put('/{id}', [DocumentTypeController::class, 'update']);
     Route::delete('/{id}', [DocumentTypeController::class, 'delete']);
-})->middleware('auth:sanctum');
+});
 
-Route::group(['prefix' => '/files'], function () {
-    Route::get('/', [FileController::class, 'getAll']);
-    Route::get('/{id}', [FileController::class, 'getById']);
-    Route::post('/', [FileController::class, 'create']);
-    Route::put('/{id}', [FileController::class, 'update']);
+Route::group(['prefix' => '/files', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('/{id}/download', [FileController::class, 'download']);
+    Route::post('/upload', [FileController::class, 'upload']);
     Route::delete('/{id}', [FileController::class, 'delete']);
-})->middleware('auth:sanctum');
+});
