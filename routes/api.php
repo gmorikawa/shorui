@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
@@ -42,4 +43,12 @@ Route::group(['prefix' => '/files', 'middleware' => 'auth:sanctum'], function ()
     Route::get('/{id}/download', [FileController::class, 'download']);
     Route::post('/upload', [FileController::class, 'upload']);
     Route::delete('/{id}', [FileController::class, 'delete']);
+});
+
+Route::group(['prefix' => '/attributes', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('/', [AttributeController::class, 'getAll']);
+    Route::get('/{key}', [AttributeController::class, 'getById']);
+    Route::post('/', [AttributeController::class, 'create']);
+    Route::put('/{key}', [AttributeController::class, 'update']);
+    Route::delete('/{key}', [AttributeController::class, 'delete']);
 });
