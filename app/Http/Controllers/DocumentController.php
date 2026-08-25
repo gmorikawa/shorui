@@ -12,7 +12,7 @@ class DocumentController extends Controller
 {
     public function getAll(): JsonResponse
     {
-        return response()->json(Document::all());
+        return response()->json(Document::all()->load('type', 'file', 'user'));
     }
 
     public function getById(string $id): JsonResponse
@@ -23,7 +23,7 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Document not found'], 404);
         }
 
-        return response()->json($document);
+        return response()->json($document->load('type', 'file', 'user'));
     }
 
     public function create(Request $request): JsonResponse
@@ -31,6 +31,7 @@ class DocumentController extends Controller
         $validator = Validator::make($request->all(), [
             'title'   => 'required|string|max:255',
             'type_id' => 'required|uuid|exists:document_types,id',
+            'attributes' => 'sometimes|array',
             'file_id' => 'required|uuid|exists:files,id',
         ]);
 
@@ -57,6 +58,7 @@ class DocumentController extends Controller
         $validator = Validator::make($request->all(), [
             'title'   => 'sometimes|string|max:255',
             'type_id' => 'sometimes|uuid|exists:document_types,id',
+            'attributes' => 'sometimes|array',
             'file_id' => 'sometimes|uuid|exists:files,id',
         ]);
 

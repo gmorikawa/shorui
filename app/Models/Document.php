@@ -13,9 +13,14 @@ class Document extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    protected $casts = [
+        'attributes' => 'json',
+    ];
+
     protected $fillable = [
         'title',
         'type_id',
+        'attributes',
         'file_id',
         'user_id',
     ];

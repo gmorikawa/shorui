@@ -11,7 +11,7 @@ class DocumentTypeController extends Controller
 {
     public function getAll(): JsonResponse
     {
-        return response()->json(DocumentType::all());
+        return response()->json(DocumentType::all()->load('attributes'));
     }
 
     public function getById(string $id): JsonResponse
