@@ -30,6 +30,7 @@ class DocumentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title'   => 'required|string|max:255',
+            'description' => 'sometimes|string',
             'type_id' => 'required|uuid|exists:document_types,id',
             'attributes' => 'sometimes|array',
             'file_id' => 'required|uuid|exists:files,id',
@@ -57,6 +58,7 @@ class DocumentController extends Controller
 
         $validator = Validator::make($request->all(), [
             'title'   => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
             'type_id' => 'sometimes|uuid|exists:document_types,id',
             'attributes' => 'sometimes|array',
             'file_id' => 'sometimes|uuid|exists:files,id',

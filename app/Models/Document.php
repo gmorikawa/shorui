@@ -19,6 +19,7 @@ class Document extends Model
 
     protected $fillable = [
         'title',
+        'description',
         'type_id',
         'attributes',
         'file_id',
