@@ -15,10 +15,14 @@
 == Document Management
 * The system should allow users to upload, download, and manage documents.
 * Users can organize documents into folders and subfolders for better organization.
+* Each user have their own private folder structure, and they can create, rename, and delete folders as needed.
+* Member Users can only manage documents within their own folder structure, and they cannot access documents uploaded by other users.
+* Admin users can view and manage all documents in the system, regardless of the folder structure.
 * Documents are private to the user who uploaded them, but Admin users can access all documents in the system.
-* Admin can create types of documents and set additional `metadata` that should be required for each type of document.
-* To add a document, users must provide the document file and fill out the required metadata fields associated with the document type.
+* Admin Users can create types of documents and set additional `attributes` that are metadata fields and are optional input.
+* To add a document, users must provide the document file and fill out the metadata fields associated with the document type.
 * Every document must have a `unique identifier`, a `title`, and a `description`. Additional metadata fields can be defined by Admin users for each document type.
+* The title of a document must be unique within user's folder. This ensures that there are no duplicate document titles within the same folder, making it easier for users to identify and manage their documents. But the same title can be used in different folders or by different users, allowing for flexibility in document naming conventions.
 
 == Search and Filtering
 * The system should provide a search functionality that allows users to search for documents based on their title, description, and metadata fields.
