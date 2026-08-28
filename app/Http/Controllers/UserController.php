@@ -2,79 +2,83 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Exceptions\NotFoundException;
+use App\Services\UserService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private UserService $service
+    ) { }
+
     public function getAll(): JsonResponse
     {
-        return response()->json(User::all());
+        return response()->json($this->service->findAll());
     }
 
     public function getById(string $id): JsonResponse
     {
-        $user = User::find($id);
-
-        if (!$user) {
+        try {
+            $user = $this->service->findById($id);
+            return response()->json($user);
+        } catch (NotFoundException) {
             return response()->json(['message' => 'User not found'], 404);
         }
-
-        return response()->json($user);
     }
 
     public function create(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        DB::beginTransaction();
+        try {
+            $user = $this->service->create($request->all());
+            DB::commit();
+            return response()->json($user, 201);
+        } catch (ValidationException $exception) {
+            DB::rollBack();
+            return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
-
-        $user = User::create($validator->validated());
-
-        return response()->json($user, 201);
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $user = User::find($id);
-
-        if (!$user) {
+        DB::beginTransaction();
+        try {
+            $user = $this->service->update($id, $request->all());
+            DB::commit();
+            return response()->json($user);
+        } catch (NotFoundException) {
+            DB::rollBack();
             return response()->json(['message' => 'User not found'], 404);
+        } catch (ValidationException $exception) {
+            DB::rollBack();
+            return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
-
-        $validator = Validator::make($request->all(), [
-            'name'     => 'sometimes|string|max:255',
-            'email'    => 'sometimes|email|unique:users,email,' . $id,
-            'password' => 'sometimes|string|min:8',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $user->update($validator->validated());
-
-        return response()->json($user);
     }
 
     public function delete(string $id): JsonResponse
     {
-        $user = User::find($id);
-
-        if (!$user) {
+        DB::beginTransaction();
+        try {
+            $this->service->delete($id);
+            DB::commit();
+            return response()->json(null, 204);
+        } catch (NotFoundException) {
+            DB::rollBack();
             return response()->json(['message' => 'User not found'], 404);
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
-
-        $user->delete();
-
-        return response()->json(null, 204);
     }
 }

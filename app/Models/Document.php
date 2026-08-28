@@ -24,6 +24,7 @@ class Document extends Model
         'attributes',
         'file_id',
         'user_id',
+        'folder_id',
     ];
 
     public function type(): BelongsTo
@@ -39,5 +40,10 @@ class Document extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(Folder::class, 'folder_id');
     }
 }

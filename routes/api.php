@@ -5,12 +5,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\FolderController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => '/auth'], function () {
+    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
     Route::post('/first-access', [AuthController::class, 'registerAdmin']);
-    Route::post('/register', [AuthController::class, 'registerUser']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
@@ -23,9 +24,14 @@ Route::group(['prefix' => '/users'], function () {
     Route::delete('/{id}', [UserController::class, 'delete'])->middleware('auth:sanctum');
 });
 
+Route::group(['prefix' => '/folders', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('/', [FolderController::class, 'getByParent']);
+});
+
 Route::group(['prefix' => '/documents', 'middleware' => 'auth:sanctum'], function () {
     Route::get('/', [DocumentController::class, 'getAll']);
     Route::get('/{id}', [DocumentController::class, 'getById']);
+    Route::get('/folder/{folderId}', [DocumentController::class, 'getByFolder']);
     Route::post('/', [DocumentController::class, 'create']);
     Route::put('/{id}', [DocumentController::class, 'update']);
     Route::delete('/{id}', [DocumentController::class, 'delete']);

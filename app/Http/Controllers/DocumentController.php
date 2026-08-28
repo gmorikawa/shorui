@@ -15,6 +15,12 @@ class DocumentController extends Controller
         return response()->json(Document::all()->load('type', 'file', 'user'));
     }
 
+    public function getByFolder(string $folderId): JsonResponse
+    {
+        $documents = Document::where('folder_id', $folderId)->get()->load('type', 'file', 'user');
+        return response()->json($documents);
+    }
+
     public function getById(string $id): JsonResponse
     {
         $document = Document::find($id);
