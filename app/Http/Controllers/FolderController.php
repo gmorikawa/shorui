@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\DuplicateException;
 use App\Exceptions\NotFoundException;
 use App\Services\FolderService;
 use Exception;
@@ -24,6 +25,26 @@ class FolderController extends Controller
             return response()->json($folders);
         } catch (NotFoundException $exception) {
             return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        }
+    }
+
+    public function create(Request $request): JsonResponse
+    {
+        try {
+            $name = $request->input('name');
+            $parentId = $request->input('parent_id');
+            $user = $request->user();
+
+            $parent = $parentId ? $this->service->findById($parentId) : null;
+            $folder = $this->service->create($name, $user, $parent);
+
+            return response()->json($folder, 201);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (DuplicateException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 409);
         } catch (Exception $exception) {
             return response()->json(['message' => $exception->getMessage()], 500);
         }

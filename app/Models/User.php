@@ -48,4 +48,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Folder::class, 'folder_id');
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::ADMIN;
+    }
 }
