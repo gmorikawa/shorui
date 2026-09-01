@@ -26,6 +26,7 @@ Route::group(['prefix' => '/users'], function () {
 
 Route::group(['prefix' => '/folders', 'middleware' => 'auth:sanctum'], function () {
     Route::get('/', [FolderController::class, 'getByParent']);
+    Route::get('/{id}', [FolderController::class, 'getById']);
     Route::post('/', [FolderController::class, 'create']);
 });
 

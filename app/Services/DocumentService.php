@@ -45,6 +45,7 @@ class DocumentService
             'description' => 'sometimes|string',
             'type_id' => 'required|uuid|exists:document_types,id',
             'attributes' => 'sometimes|array',
+            'folder_id' => 'required|uuid|exists:folders,id',
             'file_id' => 'required|uuid|exists:files,id',
         ]);
 
@@ -71,7 +72,8 @@ class DocumentService
             'description' => 'sometimes|string',
             'type_id' => 'sometimes|uuid|exists:document_types,id',
             'attributes' => 'sometimes|array',
-            'file_id' => 'sometimes|uuid|exists:files,id',
+            'folder_id' => 'required|uuid|exists:folders,id',
+            'file_id' => 'required|uuid|exists:files,id',
         ]);
 
         if ($validator->fails()) {

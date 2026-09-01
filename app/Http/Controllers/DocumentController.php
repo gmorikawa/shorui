@@ -63,7 +63,7 @@ class DocumentController extends Controller
         }
     }
 
-    public function upload(Request $request, string $id): JsonResponse
+    public function upload(Request $request): JsonResponse
     {
         $file = $this->service->upload($request->file('file'));
 

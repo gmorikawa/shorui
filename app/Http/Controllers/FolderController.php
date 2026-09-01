@@ -30,6 +30,18 @@ class FolderController extends Controller
         }
     }
 
+    public function getById(string $id): JsonResponse
+    {
+        try {
+            $folder = $this->service->findById($id);
+            return response()->json($folder);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        }
+    }
+
     public function create(Request $request): JsonResponse
     {
         try {
