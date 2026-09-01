@@ -2,103 +2,69 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\FileState;
-use App\Models\File;
+use App\Exceptions\NotFoundException;
+use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
+    public function __construct(
+        private FileService $service
+    ) { }
+
     public function getAll(): JsonResponse
     {
-        return response()->json(File::all());
+        return response()->json($this->service->findAll());
     }
 
     public function getById(string $id): JsonResponse
     {
-        $file = File::find($id);
-
-        if (!$file) {
+        try {
+            return response()->json($this->service->findById($id));
+        } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
         }
-
-        return response()->json($file);
     }
 
     public function upload(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'file' => 'required|file',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        try {
+            return response()->json($this->service->upload($request->all()), 201);
+        } catch (ValidationException $exception) {
+            return response()->json(['errors' => $exception->errors()], 422);
         }
-
-        $uploadedFile = $request->file('file');
-        $filename = Str::uuid() . '.' . $uploadedFile->getClientOriginalExtension();
-        $path = $uploadedFile->storeAs('', $filename, 'local');
-
-        $file = File::create([
-            'path'  => $path,
-            'state' => FileState::AVAILABLE,
-        ]);
-
-        return response()->json($file, 201);
     }
 
     public function download(string $id): JsonResponse|StreamedResponse
     {
-        $file = File::find($id);
-
-        if (!$file) {
-            return response()->json(['message' => 'File not found'], 404);
+        try {
+            return $this->service->download($id);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
         }
-
-        if (!Storage::disk('local')->exists($file->path)) {
-            return response()->json(['message' => 'File content not found'], 404);
-        }
-
-        return Storage::disk('local')->download($file->path);
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $file = File::find($id);
-
-        if (!$file) {
+        try {
+            return response()->json($this->service->update($id, $request->all()));
+        } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
+        } catch (ValidationException $exception) {
+            return response()->json(['errors' => $exception->errors()], 422);
         }
-
-        $validator = Validator::make($request->all(), [
-            'path'  => 'sometimes|string|unique:files,path,' . $id,
-            'state' => ['sometimes', new Enum(FileState::class)],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $file->update($validator->validated());
-
-        return response()->json($file);
     }
 
     public function delete(string $id): JsonResponse
     {
-        $file = File::find($id);
-
-        if (!$file) {
+        try {
+            $this->service->delete($id);
+            return response()->json(null, 204);
+        } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
         }
-
-        $file->delete();
-
-        return response()->json(null, 204);
     }
 }

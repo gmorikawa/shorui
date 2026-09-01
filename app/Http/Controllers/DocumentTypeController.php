@@ -2,93 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DocumentType;
+use App\Exceptions\NotFoundException;
+use App\Services\DocumentTypeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class DocumentTypeController extends Controller
 {
+    public function __construct(
+        private DocumentTypeService $service
+    ) { }
+
     public function getAll(): JsonResponse
     {
-        return response()->json(DocumentType::all()->load('attributes'));
+        return response()->json($this->service->findAll());
     }
 
     public function getById(string $id): JsonResponse
     {
-        $type = DocumentType::find($id);
-
-        if (!$type) {
+        try {
+            return response()->json($this->service->findById($id));
+        } catch (NotFoundException) {
             return response()->json(['message' => 'Document type not found'], 404);
         }
-
-        return response()->json($type);
     }
 
     public function create(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'          => 'required|string|max:255|unique:document_types,name',
-            'description'   => 'nullable|string',
-            'attributes'    => 'sometimes|array',
-            'attributes.*'  => 'string|exists:attributes,key',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        try {
+            return response()->json($this->service->create($request->all()), 201);
+        } catch (ValidationException $exception) {
+            return response()->json(['errors' => $exception->errors()], 422);
         }
-
-        $data = $validator->validated();
-
-        $type = DocumentType::create(collect($data)->except('attributes')->all());
-
-        if (array_key_exists('attributes', $data)) {
-            $type->attributes()->sync($data['attributes']);
-        }
-
-        return response()->json($type->load('attributes'), 201);
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $type = DocumentType::find($id);
-
-        if (!$type) {
+        try {
+            return response()->json($this->service->update($id, $request->all()));
+        } catch (NotFoundException) {
             return response()->json(['message' => 'Document type not found'], 404);
+        } catch (ValidationException $exception) {
+            return response()->json(['errors' => $exception->errors()], 422);
         }
-
-        $validator = Validator::make($request->all(), [
-            'name'          => 'sometimes|string|max:255|unique:document_types,name,' . $id,
-            'description'   => 'nullable|string',
-            'attributes'    => 'sometimes|array',
-            'attributes.*'  => 'string|exists:attributes,key',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $data = $validator->validated();
-
-        $type->update(collect($data)->except('attributes')->all());
-
-        if (array_key_exists('attributes', $data)) {
-            $type->attributes()->sync($data['attributes']);
-        }
-
-        return response()->json($type->load('attributes'));
     }
 
     public function delete(string $id): JsonResponse
     {
-        $type = DocumentType::find($id);
-
-        if (!$type) {
+        try {
+            $this->service->delete($id);
+            return response()->json(null, 204);
+        } catch (NotFoundException) {
             return response()->json(['message' => 'Document type not found'], 404);
         }
-
-        $type->delete();
-
-        return response()->json(null, 204);
     }
 }

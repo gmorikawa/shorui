@@ -2,107 +2,70 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Document;
-use App\Models\File;
+use App\Exceptions\NotFoundException;
+use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class DocumentController extends Controller
 {
+    public function __construct(
+        private DocumentService $service
+    ) { }
+
     public function getAll(): JsonResponse
     {
-        return response()->json(Document::all()->load('type', 'file', 'user'));
+        return response()->json($this->service->findAll());
     }
 
     public function getByFolder(string $folderId): JsonResponse
     {
-        $documents = Document::where('folder_id', $folderId)->get()->load('type', 'file', 'user');
-        return response()->json($documents);
+        return response()->json($this->service->findByFolder($folderId));
     }
 
     public function getById(string $id): JsonResponse
     {
-        $document = Document::find($id);
-
-        if (!$document) {
+        try {
+            return response()->json($this->service->findById($id));
+        } catch (NotFoundException) {
             return response()->json(['message' => 'Document not found'], 404);
         }
-
-        return response()->json($document->load('type', 'file', 'user'));
     }
 
     public function create(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'title'   => 'required|string|max:255',
-            'description' => 'sometimes|string',
-            'type_id' => 'required|uuid|exists:document_types,id',
-            'attributes' => 'sometimes|array',
-            'file_id' => 'required|uuid|exists:files,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        try {
+            return response()->json($this->service->create($request->all(), $request->user()), 201);
+        } catch (ValidationException $exception) {
+            return response()->json(['errors' => $exception->errors()], 422);
         }
-
-        $document = $validator->validated();
-        $document['user_id'] = $request->user()->id;
-
-        $document = Document::create($document);
-
-        return response()->json($document, 201);
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $document = Document::find($id);
-
-        if (!$document) {
+        try {
+            return response()->json($this->service->update($id, $request->all()));
+        } catch (NotFoundException) {
             return response()->json(['message' => 'Document not found'], 404);
+        } catch (ValidationException $exception) {
+            return response()->json(['errors' => $exception->errors()], 422);
         }
-
-        $validator = Validator::make($request->all(), [
-            'title'   => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'type_id' => 'sometimes|uuid|exists:document_types,id',
-            'attributes' => 'sometimes|array',
-            'file_id' => 'sometimes|uuid|exists:files,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $document->update($validator->validated());
-
-        return response()->json($document);
     }
 
     public function delete(string $id): JsonResponse
     {
-        $document = Document::find($id);
-
-        if (!$document) {
+        try {
+            $this->service->delete($id);
+            return response()->json(null, 204);
+        } catch (NotFoundException) {
             return response()->json(['message' => 'Document not found'], 404);
         }
-
-        $document->delete();
-
-        return response()->json(null, 204);
     }
 
     public function upload(Request $request, string $id): JsonResponse
     {
-        $file = $request->file('file');
-        $path = $file->store('uploads', 'public');
-
-        $file = new File([
-            'path' => $path,
-            'state' => \App\Enums\FileState::AVAILABLE
-        ]);
-
-        $file->save();
+        $file = $this->service->upload($request->file('file'));
 
         return response()->json(['message' => 'File uploaded successfully', 'data' => $file], 201);
     }
