@@ -2,22 +2,35 @@
 
 namespace App\Services;
 
+use App\Core\Attribute\AttributeKey;
+use App\Core\Attribute\CreateAttribute;
+use App\Core\Attribute\UpdateAttribute;
 use App\Exceptions\NotFoundException;
 use App\Models\Attribute;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class AttributeService
 {
+    /**
+     * Retrieves all attributes.
+     *
+     * @return Collection
+     */
     public function findAll(): Collection
     {
         return Attribute::all();
     }
 
-    public function findById(string $key): Attribute
+    /**
+     * Finds an attribute by its key.
+     *
+     * @param AttributeKey $key The key of the attribute to find.
+     * @return Attribute
+     * @throws NotFoundException
+     */
+    public function findByKey(AttributeKey $key): Attribute
     {
-        $attribute = Attribute::find($key);
+        $attribute = Attribute::find($key->value);
 
         if (!$attribute) {
             throw new NotFoundException('Attribute not found');
@@ -27,50 +40,49 @@ class AttributeService
     }
 
     /**
-     * @throws ValidationException
+     * Creates a new attribute.
+     *
+     * @param CreateAttribute $data The data for the new attribute.
+     * @return Attribute
      */
-    public function create(array $data): Attribute
+    public function create(CreateAttribute $data): Attribute
     {
-        $validator = Validator::make($data, [
-            'key' => 'required|string|max:50|unique:attributes,key',
-            'label' => 'required|string|max:255|unique:attributes,label',
-            'description' => 'nullable|string',
+        return Attribute::create([
+            'key' => $data->key,
+            'label' => $data->label,
+            'description' => $data->description,
         ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        return Attribute::create($validator->validated());
     }
 
     /**
+     * Updates an existing attribute by its key.
+     * 
+     * @param AttributeKey $key The key of the attribute to update.
+     * @param UpdateAttribute $data The data to update the attribute with.
      * @throws NotFoundException
-     * @throws ValidationException
      */
-    public function update(string $key, array $data): Attribute
+    public function update(AttributeKey $key, UpdateAttribute $data): Attribute
     {
-        $attribute = $this->findById($key);
+        $attribute = $this->findByKey($key);
 
-        $validator = Validator::make($data, [
-            'label' => 'sometimes|string|max:255|unique:attributes,label,' . $key . ',key',
-            'description' => 'nullable|string',
+        $attribute->update([
+            'label' => $data->label,
+            'description' => $data->description,
         ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $attribute->update($validator->validated());
 
         return $attribute;
     }
 
     /**
+     * Deletes an attribute by its key.
+     *
+     * @param AttributeKey $key The key of the attribute to delete.
      * @throws NotFoundException
      */
-    public function delete(string $key): void
+    public function delete(AttributeKey $key): void
     {
-        $this->findById($key)->delete();
+        $attribute = $this->findByKey($key);
+
+        $attribute->delete();
     }
 }

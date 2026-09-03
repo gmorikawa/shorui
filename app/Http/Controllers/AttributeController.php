@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\Attribute\AttributeKey;
+use App\Core\Attribute\CreateAttribute;
+use App\Core\Attribute\UpdateAttribute;
 use App\Exceptions\NotFoundException;
 use App\Services\AttributeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AttributeController extends Controller
@@ -22,16 +26,31 @@ class AttributeController extends Controller
     public function getById(string $key): JsonResponse
     {
         try {
-            return response()->json($this->service->findById($key));
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'Attribute not found'], 404);
+            $attribute = $this->service->findByKey(new AttributeKey($key));
+            return response()->json($attribute);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
         }
     }
 
     public function create(Request $request): JsonResponse
     {
         try {
-            return response()->json($this->service->create($request->all()), 201);
+            $validated = Validator::validate($request->all(), [
+                'key' => 'required|string|max:50|unique:attributes,key',
+                'label' => 'required|string|max:255|unique:attributes,label',
+                'description' => 'nullable|string',
+            ]);
+
+            $created = $this->service->create(
+                new CreateAttribute(
+                    $validated['key'],
+                    $validated['label'],
+                    $validated['description'] ?? null
+                )
+            );
+
+            return response()->json($created, 201);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
         }
@@ -40,9 +59,22 @@ class AttributeController extends Controller
     public function update(Request $request, string $key): JsonResponse
     {
         try {
-            return response()->json($this->service->update($key, $request->all()));
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'Attribute not found'], 404);
+            $validated = Validator::validate($request->all(), [
+                'label' => 'sometimes|string|max:255|unique:attributes,label,' . $key . ',key',
+                'description' => 'nullable|string',
+            ]);
+            
+            $updated = $this->service->update(
+                new AttributeKey($key),
+                new UpdateAttribute(
+                    $validated['label'] ?? '',
+                    $validated['description'] ?? null
+                )
+            );
+
+            return response()->json($updated);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
         }
@@ -51,10 +83,10 @@ class AttributeController extends Controller
     public function delete(string $key): JsonResponse
     {
         try {
-            $this->service->delete($key);
+            $this->service->delete(new AttributeKey($key));
             return response()->json(null, 204);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'Attribute not found'], 404);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
         }
     }
 }
