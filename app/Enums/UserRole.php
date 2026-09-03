@@ -23,4 +23,14 @@ enum UserRole: string
             default => throw new \InvalidArgumentException("Invalid user role: $value"),
         };
     }
+
+    /**
+     * Get a list of all user roles as strings with comma separation.
+     *
+     * @return string
+     */
+    public static function toStringList(): string
+    {
+        return implode(',', array_map(fn($role) => $role->value, self::cases()));
+    }
 }

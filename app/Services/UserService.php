@@ -2,16 +2,19 @@
 
 namespace App\Services;
 
+use App\Core\Auth\PasswordHasher;
+use App\Core\User\CreateUser;
+use App\Core\User\UserID;
+use App\Core\User\UpdateUser;
+use App\Exceptions\ForbiddenException;
 use App\Exceptions\NotFoundException;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class UserService
 {
     public function __construct(
-        private FolderService $folderService
+        private readonly FolderService $folderService
     ) { }
 
     /**
@@ -24,6 +27,11 @@ class UserService
         return User::all();
     }
 
+    /**
+     * Count all users.
+     *
+     * @return int
+     */
     public function countAll(): int
     {
         return User::count();
@@ -32,10 +40,10 @@ class UserService
     /**
      * Find a user by ID.
      *
-     * @param string $id
+     * @param UserID $id
      * @return User|null
      */
-    public function findById(string $id): ?User
+    public function findById(UserID $id): ?User
     {
         $user = User::find($id);
 
@@ -46,6 +54,12 @@ class UserService
         return $user->load('folder');
     }
 
+    /**
+     * Find a user by email.
+     *
+     * @param string $email
+     * @return User|null
+     */
     public function findByEmail(string $email): ?User
     {
         $user = User::where('email', $email)->first();
@@ -60,22 +74,18 @@ class UserService
     /**
      * Create a new user and its home folder.
      *
-     * @param array $data
+     * @param CreateUser $data
      * @return User
-     * @throws ValidationException
      */
-    public function create(array $data): User {
-        $validator = Validator::make($data, [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+    public function create(CreateUser $data): User {
+        $hasher = new PasswordHasher();
+
+        $user = User::create([
+            'name' => $data->name,
+            'email' => $data->email,
+            'password' => $hasher->hash($data->password),
+            'role' => $data->role->value,
         ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $user = User::create($validator->validated());
 
         $folder = $this->folderService->create($user->name, $user, null);
         $user->folder()->associate($folder);
@@ -86,14 +96,15 @@ class UserService
 
     /**
      * Update a user by ID.
+     * To update user's information the current password must be provided for verification.
      *
-     * @param string $id
-     * @param array $data
-     * @return User|null
-     * @throws NotFoundException
-     * @throws ValidationException
+     * @param UserID $id
+     * @param UpdateUser $data
+     * @return User|null updated user
+     * @throws NotFoundException if the user with the given ID does not exist
+     * @throws ForbiddenException if the current password is incorrect
      */
-    public function update(string $id, array $data): ?User
+    public function update(UserID $id, UpdateUser $data): ?User
     {
         $user = $this->findById($id);
 
@@ -101,17 +112,14 @@ class UserService
             throw new NotFoundException("User with ID $id not found");
         }
 
-        $validator = Validator::make($data, [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
-            'password' => 'sometimes|required|string|min:8',
-        ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
+        $hasher = new PasswordHasher();
+        if (!$hasher->check($user->password, $data->currentPassword)) {
+            throw new ForbiddenException("Current password is incorrect");
         }
 
-        $user->update($validator->validated());
+        $user->name = $data->name;
+        $user->email = $data->email;
+        $user->save();
 
         return $user->load('folder');
     }
@@ -119,10 +127,10 @@ class UserService
     /**
      * Delete a user by ID.
      *
-     * @param string $id
+     * @param UserID $id
      * @throws NotFoundException
      */
-    public function delete(string $id): void
+    public function delete(UserID $id): void
     {
         $user = $this->findById($id);
 

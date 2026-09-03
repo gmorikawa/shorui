@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\DuplicateException;
-use App\Exceptions\InvalidActionException;
+use App\Exceptions\ForbiddenException;
 use App\Exceptions\NotFoundException;
 use App\Models\Folder;
 use App\Models\User;
@@ -55,7 +55,7 @@ class FolderService
      */
     public function create(string $name, User $owner, ?Folder $parent): Folder {
         if ($parent && ($parent->owner->id !== $owner->id && !$owner->isAdmin())) {
-            throw new InvalidActionException("Owner of the parent folder does not match the owner of the new folder");
+            throw new ForbiddenException("Owner of the parent folder does not match the owner of the new folder");
         }
 
         $existingFolder = Folder::query()

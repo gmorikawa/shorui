@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 
-class InvalidActionException extends Exception
+class ForbiddenException extends Exception
 {
     public function __construct($message = "Forbidden")
     {

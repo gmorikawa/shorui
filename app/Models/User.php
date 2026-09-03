@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\HashedPasswordCast;
 use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,15 +35,9 @@ class User extends Authenticatable
 
     protected $casts = [
         'role' => UserRole::class,
+        'password' => HashedPasswordCast::class,
+        'email_verified_at' => 'datetime',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
 
     public function folder(): BelongsTo
     {

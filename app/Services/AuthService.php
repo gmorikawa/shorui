@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Exceptions\InvalidActionException;
+use App\Core\Auth\Credentials;
+use App\Core\Auth\PasswordHasher;
+use App\Core\User\CreateUser;
+use App\Exceptions\ForbiddenException;
 use App\Exceptions\InvalidCredentialsException;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -18,32 +18,33 @@ class AuthService
     /**
      * Register an admin user.
      *
-     * @param array $data
+     * @param CreateUser $data
      * @return mixed
-     * @throws InvalidActionException
+     * @throws ForbiddenException
      */
-    public function registerAdmin(array $data)
+    public function registerAdmin(CreateUser $data)
     {
         if ($this->userService->countAll() > 0) {
-            throw new InvalidActionException("Admin user already exists.");
+            throw new ForbiddenException("Admin user already exists.");
         }
 
         return $this->userService->create($data);
     }
 
-    public function login(array $data): string
+    /**
+     * Login a user with email and password.
+     *
+     * @param Credentials $data
+     * @return string
+     * @throws ValidationException
+     * @throws InvalidCredentialsException
+     */
+    public function login(Credentials $data): string
     {
-        $validator = Validator::make($data, [
-            'email'    => 'required|email',
-            'password' => 'required|string|min:8',
-        ]);
+        $hasher = new PasswordHasher();
+        $user = $this->userService->findByEmail($data->email);
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $user = $this->userService->findByEmail($validator->validated()['email']);
-        if (!$user || !Hash::check($validator->validated()['password'], $user->password)) {
+        if (!$user || ! $hasher->check($user->password, $data->password)) {
             throw new InvalidCredentialsException("Email and/or Password do not match.");
         }
 
