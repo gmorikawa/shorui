@@ -2,22 +2,35 @@
 
 namespace App\Services;
 
+use App\Core\DocumentType\CreateDocumentType;
+use App\Core\DocumentType\DocumentTypeID;
+use App\Core\DocumentType\UpdateDocumentType;
 use App\Exceptions\NotFoundException;
 use App\Models\DocumentType;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class DocumentTypeService
 {
+    /**
+     * Get all document types with their attributes.
+     *
+     * @return Collection|DocumentType[]
+     */
     public function findAll(): Collection
     {
-        return DocumentType::all()->load('attributes');
+        return DocumentType::all();
     }
 
-    public function findById(string $id): DocumentType
+    /**
+     * Find a document type by its ID.
+     *
+     * @param DocumentTypeID $id
+     * @return DocumentType
+     * @throws NotFoundException
+     */
+    public function findById(DocumentTypeID $id): DocumentType
     {
-        $type = DocumentType::find($id);
+        $type = DocumentType::find($id->value);
 
         if (!$type) {
             throw new NotFoundException("Document type with ID $id not found");
@@ -27,64 +40,56 @@ class DocumentTypeService
     }
 
     /**
-     * @throws ValidationException
+     * Create a new document type.
+     *
+     * @param CreateDocumentType $data
+     * @return DocumentType
      */
-    public function create(array $data): DocumentType
+    public function create(CreateDocumentType $data): DocumentType
     {
-        $validator = Validator::make($data, [
-            'name' => 'required|string|max:255|unique:document_types,name',
-            'description' => 'nullable|string',
-            'attributes' => 'sometimes|array',
-            'attributes.*' => 'string|exists:attributes,key',
+        $type = DocumentType::create([
+            'name' => $data->name,
+            'description' => $data->description,
         ]);
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
+        if ($data->attributes !== []) {
+            $type->attributes()->sync($data->attributes);
         }
 
-        $data = $validator->validated();
-        $type = DocumentType::create(collect($data)->except('attributes')->all());
-
-        if (array_key_exists('attributes', $data)) {
-            $type->attributes()->sync($data['attributes']);
-        }
-
-        return $type->load('attributes');
+        return $type;
     }
 
     /**
+     * Update an existing document type.
+     *
+     * @param DocumentTypeID $id
+     * @param UpdateDocumentType $data
+     * @return DocumentType
      * @throws NotFoundException
-     * @throws ValidationException
      */
-    public function update(string $id, array $data): DocumentType
+    public function update(DocumentTypeID $id, UpdateDocumentType $data): DocumentType
     {
         $type = $this->findById($id);
 
-        $validator = Validator::make($data, [
-            'name' => 'sometimes|string|max:255|unique:document_types,name,' . $id,
-            'description' => 'nullable|string',
-            'attributes' => 'sometimes|array',
-            'attributes.*' => 'string|exists:attributes,key',
+        $type->update([
+            'name' => $data->name,
+            'description' => $data->description,
         ]);
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
+        if ($data->attributes !== null) {
+            $type->attributes()->sync($data->attributes);
         }
 
-        $data = $validator->validated();
-        $type->update(collect($data)->except('attributes')->all());
-
-        if (array_key_exists('attributes', $data)) {
-            $type->attributes()->sync($data['attributes']);
-        }
-
-        return $type->load('attributes');
+        return $type;
     }
 
     /**
+     * Delete a document type by its ID.
+     *
+     * @param DocumentTypeID $id
      * @throws NotFoundException
      */
-    public function delete(string $id): void
+    public function delete(DocumentTypeID $id): void
     {
         $this->findById($id)->delete();
     }

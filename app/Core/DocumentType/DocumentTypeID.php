@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Core\User;
+namespace App\Core\DocumentType;
 
 /**
- * Wrapper class to represent a user ID.
+ * Wrapper class to represent a document type ID.
  */
-class UserID
+class DocumentTypeID
 {
     public readonly string $value;
 
