@@ -79,9 +79,10 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
+        $user->load('folder');
 
         try {
-            return response()->json($this->userService->findById($user->id), 200);
+            return response()->json($user, 200);
         } catch (NotFoundException $e) {
             return response()->json([ 'message' => $e->getMessage() ], 404);
         } catch (Exception $e) {
