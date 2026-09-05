@@ -33,6 +33,7 @@ Route::group(['prefix' => '/folders', 'middleware' => 'auth:sanctum'], function 
 Route::group(['prefix' => '/documents', 'middleware' => 'auth:sanctum'], function () {
     Route::get('/', [DocumentController::class, 'getAll']);
     Route::get('/{id}', [DocumentController::class, 'getById']);
+    Route::get('/{id}/download', [DocumentController::class, 'download']);
     Route::get('/folder/{folderId}', [DocumentController::class, 'getByFolder']);
     Route::post('/', [DocumentController::class, 'create']);
     Route::put('/{id}', [DocumentController::class, 'update']);

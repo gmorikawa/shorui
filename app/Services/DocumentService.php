@@ -7,13 +7,20 @@ use App\Exceptions\NotFoundException;
 use App\Models\Document;
 use App\Models\File;
 use App\Models\User;
+use App\Core\Document\DocumentID;
+use App\Core\File\FileID;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentService
 {
+    public function __construct(
+        private readonly FileService $fileService
+    ) { }
+
     public function findAll(): Collection
     {
         return Document::all()->load('type', 'file', 'user');
@@ -24,18 +31,21 @@ class DocumentService
         return Document::where('folder_id', $folderId)->get()->load('type', 'file', 'user');
     }
 
-    public function findById(string $id): Document
+    public function findById(DocumentID $id): Document
     {
-        $document = Document::find($id);
+        $document = Document::find($id->value);
 
         if (!$document) {
-            throw new NotFoundException("Document with ID $id not found");
+            throw new NotFoundException("Document with ID $id->value not found");
         }
 
         return $document->load('type', 'file', 'user');
     }
 
     /**
+     * @param array $data
+     * @param User $user
+     * @return Document
      * @throws ValidationException
      */
     public function create(array $data, User $user): Document
@@ -60,10 +70,13 @@ class DocumentService
     }
 
     /**
+     * @param DocumentID $id
+     * @param array $data
+     * @return Document
      * @throws NotFoundException
      * @throws ValidationException
      */
-    public function update(string $id, array $data): Document
+    public function update(DocumentID $id, array $data): Document
     {
         $document = $this->findById($id);
 
@@ -88,7 +101,7 @@ class DocumentService
     /**
      * @throws NotFoundException
      */
-    public function delete(string $id): void
+    public function delete(DocumentID $id): void
     {
         $this->findById($id)->delete();
     }
@@ -101,5 +114,12 @@ class DocumentService
             'path' => $path,
             'state' => FileState::AVAILABLE,
         ]);
+    }
+
+    public function download(DocumentID $id): StreamedResponse
+    {
+        $document = $this->findById($id)->load('file');
+
+        return $this->fileService->download(new FileID($document->file->id));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Core\File\FileID;
 use App\Enums\FileState;
 use App\Exceptions\NotFoundException;
 use App\Models\File;
@@ -21,9 +22,9 @@ class FileService
         return File::all();
     }
 
-    public function findById(string $id): File
+    public function findById(FileID $id): File
     {
-        $file = File::find($id);
+        $file = File::find($id->value);
 
         if (!$file) {
             throw new NotFoundException('File not found');
@@ -58,7 +59,7 @@ class FileService
     /**
      * @throws NotFoundException
      */
-    public function download(string $id): StreamedResponse
+    public function download(FileID $id): StreamedResponse
     {
         $file = $this->findById($id);
         /** @var FilesystemAdapter $disk */
@@ -75,12 +76,12 @@ class FileService
      * @throws NotFoundException
      * @throws ValidationException
      */
-    public function update(string $id, array $data): File
+    public function update(FileID $id, array $data): File
     {
         $file = $this->findById($id);
 
         $validator = Validator::make($data, [
-            'path' => 'sometimes|string|unique:files,path,' . $id,
+            'path' => 'sometimes|string|unique:files,path,' . $id->value,
             'state' => ['sometimes', new Enum(FileState::class)],
         ]);
 
@@ -96,7 +97,7 @@ class FileService
     /**
      * @throws NotFoundException
      */
-    public function delete(string $id): void
+    public function delete(FileID $id): void
     {
         $this->findById($id)->delete();
     }

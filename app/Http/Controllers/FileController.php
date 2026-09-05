@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\File\FileID;
 use App\Exceptions\NotFoundException;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,8 @@ class FileController extends Controller
     public function getById(string $id): JsonResponse
     {
         try {
-            return response()->json($this->service->findById($id));
+            $file = $this->service->findById(new FileID($id));
+            return response()->json($file);
         } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
         }
@@ -41,7 +43,7 @@ class FileController extends Controller
     public function download(string $id): JsonResponse|StreamedResponse
     {
         try {
-            return $this->service->download($id);
+            return $this->service->download(new FileID($id));
         } catch (NotFoundException $exception) {
             return response()->json(['message' => $exception->getMessage()], 404);
         }
@@ -50,7 +52,7 @@ class FileController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         try {
-            return response()->json($this->service->update($id, $request->all()));
+            return response()->json($this->service->update(new FileID($id), $request->all()));
         } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
         } catch (ValidationException $exception) {
@@ -61,7 +63,7 @@ class FileController extends Controller
     public function delete(string $id): JsonResponse
     {
         try {
-            $this->service->delete($id);
+            $this->service->delete(new FileID($id));
             return response()->json(null, 204);
         } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
