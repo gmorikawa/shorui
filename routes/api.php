@@ -28,6 +28,7 @@ Route::group(['prefix' => '/folders', 'middleware' => 'auth:sanctum'], function 
     Route::get('/', [FolderController::class, 'getByParent']);
     Route::get('/{id}', [FolderController::class, 'getById']);
     Route::post('/', [FolderController::class, 'create']);
+    Route::delete('/{id}', [FolderController::class, 'delete']);
 });
 
 Route::group(['prefix' => '/documents', 'middleware' => 'auth:sanctum'], function () {

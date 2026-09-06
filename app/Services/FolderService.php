@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Core\Document\DocumentID;
+use App\Core\Folder\FolderID;
 use App\Exceptions\DuplicateException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\NotFoundException;
@@ -10,6 +12,10 @@ use App\Models\User;
 
 class FolderService
 {
+    public function __construct(
+        private readonly DocumentService $documentService
+    ) {}
+
     /**
      * Find folders by their parent folder.
      * 
@@ -31,13 +37,13 @@ class FolderService
     /**
      * Find folder by its ID.
      *
-     * @param string $id
+     * @param FolderID $id
      * @return Folder
      * @throws NotFoundException
      */
-    public function findById(string $id): Folder
+    public function findById(FolderID $id): Folder
     {
-        $folder = Folder::find($id);
+        $folder = Folder::find($id->value);
         if (!$folder) {
             throw new NotFoundException("Folder with ID $id not found");
         }
@@ -74,5 +80,28 @@ class FolderService
         $folder->save();
 
         return $folder;
+    }
+
+    /**
+     * Delete a folder by its ID, including all its documents and subfolders.
+     *
+     * @param FolderID $id
+     * @throws NotFoundException
+     */
+    public function delete(FolderID $id): void
+    {
+        $folder = $this->findById($id);
+
+        $documents = $folder->documents()->get();
+        foreach ($documents as $document) {
+            $this->documentService->delete(new DocumentID($document->id));
+        }
+
+        $subfolders = $folder->subfolders()->get();
+        foreach ($subfolders as $subfolder) {
+            $this->delete(new FolderID($subfolder->id));
+        }
+
+        $folder->delete();
     }
 }
