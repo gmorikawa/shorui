@@ -24,9 +24,9 @@ class DocumentTypeController extends Controller
     public function getAll(): JsonResponse
     {
         try {
-            $documentTypes = $this->service
-                ->findAll()
-                ->load('attributes');
+            $documentTypes = $this->service->findAll();
+            $documentTypes->load('attributes');
+
             return response()->json($documentTypes);
         } catch (Exception $exception) {
             return response()->json(['message' => 'Failed to fetch document types'], 500);
@@ -36,9 +36,8 @@ class DocumentTypeController extends Controller
     public function getById(string $id): JsonResponse
     {
         try {
-            $documentType = $this->service
-                ->findById(new DocumentTypeID($id))
-                ->load('attributes');
+            $documentType = $this->service->findById(new DocumentTypeID($id));
+            $documentType->load('attributes');
 
             return response()->json($documentType);
         } catch (NotFoundException) {
@@ -63,8 +62,8 @@ class DocumentTypeController extends Controller
                         $validated['description'] ?? null,
                         $validated['attributes'] ?? [],
                     )
-                )
-                ->load('attributes');
+                );
+            $created->load('attributes');
 
             return response()->json($created, 201);
         } catch (ValidationException $exception) {
@@ -90,8 +89,8 @@ class DocumentTypeController extends Controller
                         $validated['description'] ?? null,
                         $validated['attributes'] ?? [],
                     )
-                )
-                ->load('attributes');
+                );
+            $updated->load('attributes');
 
             return response()->json($updated);
         } catch (NotFoundException) {

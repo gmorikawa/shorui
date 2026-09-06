@@ -7,12 +7,12 @@ use App\Exceptions\NotFoundException;
 use App\Models\Document;
 use App\Models\File;
 use App\Models\User;
+use App\Core\Document\CreateDocument;
 use App\Core\Document\DocumentID;
+use App\Core\Document\UpdateDocument;
 use App\Core\File\FileID;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentService
@@ -43,57 +43,41 @@ class DocumentService
     }
 
     /**
-     * @param array $data
+     * @param CreateDocument $data
      * @param User $user
      * @return Document
-     * @throws ValidationException
      */
-    public function create(array $data, User $user): Document
+    public function create(CreateDocument $data, User $user): Document
     {
-        $validator = Validator::make($data, [
-            'title' => 'required|string|max:255',
-            'description' => 'sometimes|string',
-            'type_id' => 'required|uuid|exists:document_types,id',
-            'attributes' => 'sometimes|array',
-            'folder_id' => 'required|uuid|exists:folders,id',
-            'file_id' => 'required|uuid|exists:files,id',
+        return Document::create([
+            'title' => $data->title,
+            'description' => $data->description,
+            'type_id' => $data->typeId,
+            'attributes' => $data->attributes,
+            'folder_id' => $data->folderId,
+            'file_id' => $data->fileId,
+            'user_id' => $user->id,
         ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $document = $validator->validated();
-        $document['user_id'] = $user->id;
-
-        return Document::create($document);
     }
 
     /**
      * @param DocumentID $id
-     * @param array $data
+     * @param UpdateDocument $data
      * @return Document
      * @throws NotFoundException
-     * @throws ValidationException
      */
-    public function update(DocumentID $id, array $data): Document
+    public function update(DocumentID $id, UpdateDocument $data): Document
     {
         $document = $this->findById($id);
 
-        $validator = Validator::make($data, [
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'type_id' => 'sometimes|uuid|exists:document_types,id',
-            'attributes' => 'sometimes|array',
-            'folder_id' => 'required|uuid|exists:folders,id',
-            'file_id' => 'required|uuid|exists:files,id',
+        $document->update([
+            'title' => $data->title,
+            'type_id' => $data->typeId,
+            'description' => $data->description,
+            'attributes' => $data->attributes,
+            'folder_id' => $data->folderId,
+            'file_id' => $data->fileId,
         ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $document->update($validator->validated());
 
         return $document;
     }
@@ -103,7 +87,10 @@ class DocumentService
      */
     public function delete(DocumentID $id): void
     {
-        $this->findById($id)->delete();
+        $document = $this->findById($id);
+        $this->fileService->delete(new FileID($document->file->id));
+
+        $document->delete();
     }
 
     public function upload(UploadedFile $uploadedFile): File
