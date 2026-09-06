@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\FileState;
+use App\Core\File\FileState;
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

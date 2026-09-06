@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\FileState;
+use App\Core\File\FileState;
 use App\Exceptions\NotFoundException;
 use App\Models\Document;
 use App\Models\File;

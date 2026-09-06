@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Core\Auth\Credentials;
 use App\Core\Auth\PlainPassword;
 use App\Core\User\CreateUser;
-use App\Enums\UserRole;
+use App\Core\User\UserRole;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\InvalidCredentialsException;
 use App\Exceptions\NotFoundException;

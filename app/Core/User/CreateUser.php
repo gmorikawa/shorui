@@ -3,7 +3,7 @@
 namespace App\Core\User;
 
 use App\Core\Auth\PlainPassword;
-use App\Enums\UserRole;
+use App\Core\User\UserRole;
 
 class CreateUser
 {

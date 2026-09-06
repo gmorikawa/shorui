@@ -6,7 +6,7 @@ use App\Core\Auth\PlainPassword;
 use App\Core\User\CreateUser;
 use App\Core\User\UserID;
 use App\Core\User\UpdateUser;
-use App\Enums\UserRole;
+use App\Core\User\UserRole;
 use App\Exceptions\NotFoundException;
 use App\Services\UserService;
 use Exception;

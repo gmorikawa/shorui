@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Core\File\FileID;
-use App\Enums\FileState;
+use App\Core\File\FileState;
 use App\Exceptions\NotFoundException;
 use App\Models\File;
 use Illuminate\Database\Eloquent\Collection;

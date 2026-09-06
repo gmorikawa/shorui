@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Casts\HashedPasswordCast;
-use App\Enums\UserRole;
+use App\Core\User\UserRole;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
