@@ -9,7 +9,10 @@ use App\Core\User\UpdateUser;
 use App\Core\User\UserRole;
 use App\Exceptions\NotFoundException;
 use App\Services\UserService;
+
+use Error;
 use Exception;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +23,17 @@ class UserController extends Controller
 {
     public function __construct(
         private UserService $service
-    ) { }
+    ) {}
 
     public function getAll(): JsonResponse
     {
-        return response()->json($this->service->findAll());
+        try {
+            return response()->json($this->service->findAll());
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
+        }
     }
 
     public function getById(string $id): JsonResponse
@@ -32,8 +41,10 @@ class UserController extends Controller
         try {
             $user = $this->service->findById(new UserID($id));
             return response()->json($user);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'User not found'], 404);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -62,9 +73,9 @@ class UserController extends Controller
         } catch (ValidationException $exception) {
             DB::rollBack();
             return response()->json(['errors' => $exception->errors()], 422);
-        } catch (Exception $exception) {
+        } catch (Error $error) {
             DB::rollBack();
-            return response()->json(['message' => $exception->getMessage()], 500);
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -87,12 +98,12 @@ class UserController extends Controller
             );
 
             return response()->json($user);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'User not found'], 404);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
-        } catch (Exception $exception) {
-            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -101,10 +112,10 @@ class UserController extends Controller
         try {
             $this->service->delete(new UserID($id));
             return response()->json(null, 204);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'User not found'], 404);
-        } catch (Exception $exception) {
-            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 }

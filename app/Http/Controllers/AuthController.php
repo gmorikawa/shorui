@@ -10,6 +10,7 @@ use App\Exceptions\ForbiddenException;
 use App\Exceptions\InvalidCredentialsException;
 use App\Exceptions\NotFoundException;
 use App\Services\AuthService;
+use Error;
 use Exception;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class AuthController extends Controller
     public function __construct(
         private AuthService $authService,
         private UserService $userService
-    ) { }
+    ) {}
 
     public function registerAdmin(Request $request)
     {
@@ -41,9 +42,11 @@ class AuthController extends Controller
             $user = $this->authService->registerAdmin($createUser);
             return response()->json($user, 201);
         } catch (ForbiddenException $e) {
-            return response()->json([ 'message' => $e->getMessage() ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         } catch (Exception $e) {
-            return response()->json([ 'message' => $e->getMessage() ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -63,9 +66,11 @@ class AuthController extends Controller
             $token = $this->authService->login($credentials);
             return response()->json(['token' => $token], 200);
         } catch (InvalidCredentialsException $e) {
-            return response()->json([ 'message' => $e->getMessage() ], 401);
+            return response()->json(['message' => $e->getMessage()], 401);
         } catch (Exception $e) {
-            return response()->json([ 'message' => $e->getMessage() ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -84,9 +89,11 @@ class AuthController extends Controller
         try {
             return response()->json($user, 200);
         } catch (NotFoundException $e) {
-            return response()->json([ 'message' => $e->getMessage() ], 404);
+            return response()->json(['message' => $e->getMessage()], 404);
         } catch (Exception $e) {
-            return response()->json([ 'message' => $e->getMessage() ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 }

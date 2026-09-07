@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Core\File\FileID;
 use App\Exceptions\NotFoundException;
 use App\Services\FileService;
+
+use Error;
+use Exception;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -14,11 +18,17 @@ class FileController extends Controller
 {
     public function __construct(
         private FileService $service
-    ) { }
+    ) {}
 
     public function getAll(): JsonResponse
     {
-        return response()->json($this->service->findAll());
+        try {
+            return response()->json($this->service->findAll());
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
+        }
     }
 
     public function getById(string $id): JsonResponse
@@ -28,6 +38,10 @@ class FileController extends Controller
             return response()->json($file);
         } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -37,6 +51,10 @@ class FileController extends Controller
             return response()->json($this->service->upload($request->all()), 201);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -46,6 +64,10 @@ class FileController extends Controller
             return $this->service->download(new FileID($id));
         } catch (NotFoundException $exception) {
             return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -57,6 +79,10 @@ class FileController extends Controller
             return response()->json(['message' => 'File not found'], 404);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -67,6 +93,10 @@ class FileController extends Controller
             return response()->json(null, 204);
         } catch (NotFoundException) {
             return response()->json(['message' => 'File not found'], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 }

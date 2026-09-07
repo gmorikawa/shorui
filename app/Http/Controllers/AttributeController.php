@@ -7,6 +7,10 @@ use App\Core\Attribute\CreateAttribute;
 use App\Core\Attribute\UpdateAttribute;
 use App\Exceptions\NotFoundException;
 use App\Services\AttributeService;
+
+use Error;
+use Exception;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -16,11 +20,17 @@ class AttributeController extends Controller
 {
     public function __construct(
         private AttributeService $service
-    ) { }
+    ) {}
 
     public function getAll(): JsonResponse
     {
-        return response()->json($this->service->findAll());
+        try {
+            return response()->json($this->service->findAll());
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
+        }
     }
 
     public function getById(string $key): JsonResponse
@@ -30,6 +40,10 @@ class AttributeController extends Controller
             return response()->json($attribute);
         } catch (NotFoundException $exception) {
             return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -53,6 +67,10 @@ class AttributeController extends Controller
             return response()->json($created, 201);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -63,7 +81,7 @@ class AttributeController extends Controller
                 'label' => 'sometimes|string|max:255|unique:attributes,label,' . $key . ',key',
                 'description' => 'nullable|string',
             ]);
-            
+
             $updated = $this->service->update(
                 new AttributeKey($key),
                 new UpdateAttribute(
@@ -77,6 +95,10 @@ class AttributeController extends Controller
             return response()->json(['message' => $exception->getMessage()], 404);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -87,6 +109,10 @@ class AttributeController extends Controller
             return response()->json(null, 204);
         } catch (NotFoundException $exception) {
             return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 }

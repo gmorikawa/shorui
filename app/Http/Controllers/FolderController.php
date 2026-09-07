@@ -6,7 +6,10 @@ use App\Core\Folder\FolderID;
 use App\Exceptions\DuplicateException;
 use App\Exceptions\NotFoundException;
 use App\Services\FolderService;
+
+use Error;
 use Exception;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +17,7 @@ class FolderController extends Controller
 {
     public function __construct(
         private FolderService $service
-    ) { }
+    ) {}
 
     public function getByParent(Request $request): JsonResponse
     {
@@ -28,6 +31,8 @@ class FolderController extends Controller
             return response()->json(['message' => $exception->getMessage()], 404);
         } catch (Exception $exception) {
             return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
     }
 
@@ -40,6 +45,8 @@ class FolderController extends Controller
             return response()->json(['message' => $exception->getMessage()], 404);
         } catch (Exception $exception) {
             return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -60,6 +67,8 @@ class FolderController extends Controller
             return response()->json(['message' => $exception->getMessage()], 409);
         } catch (Exception $exception) {
             return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -72,6 +81,8 @@ class FolderController extends Controller
             return response()->json(['message' => $exception->getMessage()], 404);
         } catch (Exception $exception) {
             return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 }

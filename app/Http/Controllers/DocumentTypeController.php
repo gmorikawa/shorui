@@ -8,6 +8,7 @@ use App\Core\DocumentType\UpdateDocumentType;
 use App\Exceptions\NotFoundException;
 use App\Services\DocumentTypeService;
 
+use Error;
 use Exception;
 
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ class DocumentTypeController extends Controller
 {
     public function __construct(
         private DocumentTypeService $service
-    ) { }
+    ) {}
 
     public function getAll(): JsonResponse
     {
@@ -29,7 +30,9 @@ class DocumentTypeController extends Controller
 
             return response()->json($documentTypes);
         } catch (Exception $exception) {
-            return response()->json(['message' => 'Failed to fetch document types'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -40,8 +43,12 @@ class DocumentTypeController extends Controller
             $documentType->load('attributes');
 
             return response()->json($documentType);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'Document type not found'], 404);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -68,6 +75,10 @@ class DocumentTypeController extends Controller
             return response()->json($created, 201);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -93,10 +104,14 @@ class DocumentTypeController extends Controller
             $updated->load('attributes');
 
             return response()->json($updated);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'Document type not found'], 404);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
         } catch (ValidationException $exception) {
             return response()->json(['errors' => $exception->errors()], 422);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 
@@ -105,8 +120,12 @@ class DocumentTypeController extends Controller
         try {
             $this->service->delete(new DocumentTypeID($id));
             return response()->json(null, 204);
-        } catch (NotFoundException) {
-            return response()->json(['message' => 'Document type not found'], 404);
+        } catch (NotFoundException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        } catch (Exception $exception) {
+            return response()->json(['message' => $exception->getMessage()], 500);
+        } catch (Error $error) {
+            return response()->json(['message' => $error->getMessage()], 500);
         }
     }
 }
